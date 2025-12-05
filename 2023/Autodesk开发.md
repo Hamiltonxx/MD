@@ -1,0 +1,125 @@
+# Authentication(OAuth)
+## Two-Legged Authentication
+1. 通过ID和Secret拿到Token  
+2. 每次访问Restful API都带上Token  
+对web应用来说，这是个server-to-server通信，用户是无感的。
+## Three-Legged Authentication
+会把用户重定向到Autodesk进行登录，server通过callback拿到authorization code.以此换取一个token.
+## Scopes
+Scope决定了Token的权限。  
+user-profile:read, user:read, user:write, viewables:read, data:read, data:write, data:create, data:search, bucket:create, bucket:read, bucket:update, bucket:delete, code:all, account:read, account:write
+```shell
+curl -X POST -H 'Content-Type: application/x-www-form-urlencoded' -d 'client_id=7gymGZER3KLlopy4qR8M0WED2pw67EH7&client_secret=r5c251mVZxGIqaq4&grant_type=client_credentials&scope=data:read%20data:write%20data:create%20bucket:create%20bucket:read%20bucket:update%20bucket:delete' 'https://developer.api.autodesk.com/authentication/v1/authenticate'
+```
+
+# Data Exchange
+假设一个建筑公司，通过Revit设计了一个医院，要和我们的制造商伙伴沟通楼梯栏杆。我们需要share的是楼梯的位置、形状等信息，但我们并不想把整个医院模型分享给他。对制造商来说，他们只需要获取和他们工作相关的数据。  
+这里双方可以用Data Exchange.
+
+# Data Management
+## oss
+类型 | 描述
+--- | ---
+bucket | object容器
+object | 通过URN或key标识的二进制数据  
+每个bucket有一个retention policy来决定对象保留时间。
+policy | retention time
+--- | ---
+transient | 保留24小时
+temporary | 保留30天
+persistent | 永久保留直至被删除  
+```shell
+curl -X GET -H "Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IlU3c0dGRldUTzlBekNhSzBqZURRM2dQZXBURVdWN2VhIn0.eyJzY29wZSI6WyJkYXRhOnJlYWQiLCJkYXRhOndyaXRlIiwiZGF0YTpjcmVhdGUiLCJidWNrZXQ6cmVhZCIsImJ1Y2tldDp1cGRhdGUiXSwiY2xpZW50X2lkIjoiN2d5bUdaRVIzS0xsb3B5NHFSOE0wV0VEMnB3NjdFSDciLCJhdWQiOiJodHRwczovL2F1dG9kZXNrLmNvbS9hdWQvYWp3dGV4cDYwIiwianRpIjoiTGZnb3JmUXc2TGhYVkhiYjlScllVQUhwYmxDeThyOUNJUGRhQVU4WTNtRU5TRFVqbEg3aXQ1YzR5WFA4SWFWciIsImV4cCI6MTY1NzI1NTQ5NH0.Qv0gUcO_uaBtUT3yptGxcCWgqDYxmOFMqh1Z9GDyNXPuKNdPmAb5q-QzI5ZETL_Z7JhmO1KSUprmFCCFlL_5opoOJ0EKQ5YnTyW8_odPz3VrnAzcDSChVTw5gR6joSdrCUq7a0nA1-NCyienhYFGf_3oqCndV4_evjD5EiBMzj0LT59Iaoq0bcZiGOTdYqHRBQm-1WAvvxCDSgUUXocxStMkE76ig7iSzX6ShVedM_1xiGBahEn9e-VXFA_RC3FJ2h79J8KwZ7oVjr1zlthDYp5uT4929i4ix9z6IlE-jmbIaWDa7ECAdH3tFP67e7cBL2yPdHVh7J40-Cj7LuUFyA" https://developer.api.autodesk.com/project/v1/hubs
+```
+## bucket create,read,write
+### create bucket
+```shell
+curl -X POST -H 'Content-Type:application/json' -H 'Authorization:Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IlU3c0dGRldUTzlBekNhSzBqZURRM2dQZXBURVdWN2VhIn0.eyJzY29wZSI6WyJkYXRhOnJlYWQiLCJkYXRhOndyaXRlIiwiZGF0YTpjcmVhdGUiLCJidWNrZXQ6Y3JlYXRlIiwiYnVja2V0OnJlYWQiLCJidWNrZXQ6dXBkYXRlIiwiYnVja2V0OmRlbGV0ZSJdLCJjbGllbnRfaWQiOiI3Z3ltR1pFUjNLTGxvcHk0cVI4TTBXRUQycHc2N0VINyIsImF1ZCI6Imh0dHBzOi8vYXV0b2Rlc2suY29tL2F1ZC9hand0ZXhwNjAiLCJqdGkiOiJDZk5hTktZSTJHUExzbFAyZFRZWFhpWlExMFJsS0dLWWtvdjJrOTR3WXh4VGkweEZIc1lSR0VaMWRzMm85SG1wIiwiZXhwIjoxNjU3MjU1ODYzfQ.akbd1MyflJHzeKXTsSL6wYQsIPZP7MyzGyCqAvi--E9JhW-VH1lOw3viokZf3g1RR8FZLZalP4gW658Y6O7W1hHcukJp_HmXnztx-O5sszWXvgqOcUw-EiHa79XK6v6mzVq5R7Z9abCHJRbkcIA_KtnFQeLt-7yyD8x33oM4c76L522vl4MjGrnJTyCLOgubTwt81TaStPyCgBAdsWCYmJokjbiQkgvZZ_hfnR23cr-TnPBq6JcuWj3UxMX56AoIv09Cf5_WWD-oWY1t3725WLSlv-lBIa0tVnNSu0TrQNacEMOrTaZM-JgPEePqtU1VOFYuwpJ1-4DnY8qGH_6-CQ' -d '{"bucketKey":"hami_tst_bucket","policyKey":"transient"}' https://developer.api.autodesk.com/oss/v2/buckets
+```
+```shell
+curl -H 'Authorization:Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IlU3c0dGRldUTzlBekNhSzBqZURRM2dQZXBURVdWN2VhIn0.eyJzY29wZSI6WyJkYXRhOnJlYWQiLCJkYXRhOndyaXRlIiwiZGF0YTpjcmVhdGUiLCJidWNrZXQ6Y3JlYXRlIiwiYnVja2V0OnJlYWQiLCJidWNrZXQ6dXBkYXRlIiwiYnVja2V0OmRlbGV0ZSJdLCJjbGllbnRfaWQiOiI3Z3ltR1pFUjNLTGxvcHk0cVI4TTBXRUQycHc2N0VINyIsImF1ZCI6Imh0dHBzOi8vYXV0b2Rlc2suY29tL2F1ZC9hand0ZXhwNjAiLCJqdGkiOiJRQzJ3MVlxRUtmdWRkMGIwR2thVElDQUNJS0RvbWRhWWpZTWZCRkEzVFA1cktlYklReFY0SXhqZW5CUk12S0xGIiwiZXhwIjoxNjU3Mjc2MTE1fQ.UAflSkVsDs-U5ZxazqkEf4jcLFM74Lku8RAtx14tRyzlyXT93wjMMjZSEzHlx5tBymVRxs-xq7YxoCIzakkh2jd924eTJRHsr0W9qFZbgtt44ckG4L3P_05lsMdKsOd1GSns_Fpd6ef0qrPO1YWOEolt2ZzNXKD1jwvODpaT5TcPkMoXwTmHBmux-p6oVTtRHjj-jCG7dpeTpyoTJs_sA7RW6hSKWi6ZfwiYO7gQMXAyQeV1Rd1yF-rlhRV8vk-OMligyKXGVD1Q87zidlQ8kJa8jO7Bfse3jQ9X-d6zZUmHWRvNsr0t-lmpzJJcbBuVLzBMMZQB-3y7aat-JYW-vQ' https://developer.api.autodesk.com/oss/v2/buckets/hami_tst_bucket/details
+```
+### upload file
+```shell
+curl -X PUT -H 'Authorization:Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IlU3c0dGRldUTzlBekNhSzBqZURRM2dQZXBURVdWN2VhIn0.eyJzY29wZSI6WyJkYXRhOnJlYWQiLCJkYXRhOndyaXRlIiwiZGF0YTpjcmVhdGUiLCJidWNrZXQ6Y3JlYXRlIiwiYnVja2V0OnJlYWQiLCJidWNrZXQ6dXBkYXRlIiwiYnVja2V0OmRlbGV0ZSJdLCJjbGllbnRfaWQiOiI3Z3ltR1pFUjNLTGxvcHk0cVI4TTBXRUQycHc2N0VINyIsImF1ZCI6Imh0dHBzOi8vYXV0b2Rlc2suY29tL2F1ZC9hand0ZXhwNjAiLCJqdGkiOiJiNXNuaW9jV0Q1elF4UkxoN1NmYVl2aDY5bWZhY3N4dzlYa284Y2tHN2pEejl3eVdhZTVhUm1JVzdyY3NMMEJOIiwiZXhwIjoxNjU3NjIwNjk2fQ.CV7KcYvCK_AbX3O0L3FKRIKM83gSZkA6SRIaREk3YSkiHCvQgATtbbsd27knFNanQYdRffqvXhkjSws6rFQzzw4YgTMNgcdN__MldKI4NmWsJ2oDU8i8U-TJIW5Yx4d2SsYulzBc_wW2HxEj1CgLmaI3CAS2NRygmpi0fHqI_nSVviaCdG7HmEk4NFjsLefP0ZhZggStjaBCwRqqI6yoGn1sg-U4RGfodwqz8flLqS18hgzSH4a_bjO8rMZatyFWZmpav8gjlrjEtcVbra9hvEM_DDGLFM6rKdU2XeATKKxUzWehCucChXht1vM0k1OgmJpUkh9mmXCPSxEAhQGWSw' -H 'Content-Type:application/octet-stream' 'https://developer.api.autodesk.com/oss/v2/buckets/hami_tst_bucket/objects/inno_valley.rvt' -T 'inno_valley.rvt'
+```
+### Finalize Upload
+To make the uploaded file available for download,you must finalize the upload.
+```shell
+curl -X POST -H 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IlU3c0dGRldUTzlBekNhSzBqZURRM2dQZXBURVdWN2VhIn0.eyJzY29wZSI6WyJkYXRhOnJlYWQiLCJkYXRhOndyaXRlIiwiZGF0YTpjcmVhdGUiLCJidWNrZXQ6Y3JlYXRlIiwiYnVja2V0OnJlYWQiLCJidWNrZXQ6dXBkYXRlIiwiYnVja2V0OmRlbGV0ZSJdLCJjbGllbnRfaWQiOiI3Z3ltR1pFUjNLTGxvcHk0cVI4TTBXRUQycHc2N0VINyIsImF1ZCI6Imh0dHBzOi8vYXV0b2Rlc2suY29tL2F1ZC9hand0ZXhwNjAiLCJqdGkiOiJWeE1wZ3U0cEtGeVN1dmViZDhXVVJlaTVCOE0xT3FYeGxxWUZlTkxmTGg1eDZGQmo2bVNDeXhwZ1d4djR3SGlKIiwiZXhwIjoxNjU3NTA1MTc0fQ.UMNBXC3dXcQ2XLKubxlZJ5fMhsIGQVGejz4JSAiA5NAjZv6ypP-JsMdnfjPtWWfYIH4QKPnQy3DQ0OrFBLdAIuD-MAGwL1Z3MPWtl-QesDpnj7sp6H7G2fROQl2ltp7GDZ5cRPrFWTFr_z8TTLcklfe5cUGdFiyrus9QhcNanM7t8BxeBoDWLCFuDCXzzjjUa5XcOSgW9RPsZjz3Jlz7Q2AUCH6EqwLxWzVMWdkcn8OsBsFvBYSSptygcTzo3eICRjvi-mwwHNd22ngf78OrrH9PMB6eevECby_f2WI2inHBgpEB78qYznMijXj5zE4h27Hi017eoGi7zV-Pw9330A' -H 'Content-Type:application/json' -d '{"ossbucketKey":"hami_tst_bucket","ossSourceFileObjectKey":"Cube0.rvt","access":"full"}' 'https://developer.api.autodesk.com/oss/v2/buckets/<YOUR_BUCKET_KEY>/objects/<YOUR_OBJECT_KEY>/signeds3upload'
+```
+
+# Model Derivative API
+Model Derivative API可以把模型文件转成不同格式。翻译过程中，会生成一个JSON文件。  
+三种用途：  
+1. 把模型文件翻译成SVF/SVF2格式使之能在浏览器里显示。
+2. 一种格式翻译成另一种格式。
+3. 把构件的几何表示导出到OBJ文件。
+## Translation job
+我们POST一个job来translate model. 它在完成时会给我们callback. 我们也可以主动发起查询，通过GET {urn}/manifest获取文件并查看。
+## SVF/SVF2
+SVF和SVF2都是为web设计的矢量格式。SVF2更适合建筑类的大型设计文件。
+## Object ID & External ID
+```json
+{
+  "bucketKey" : "hami_tst_bucket",
+  "objectId" : "urn:adsk.objects:os.object:hami_tst_bucket/Cube0.rvt",
+  "objectKey" : "Cube0.rvt",
+  "sha1" : "371c13d0d0351829756e5db4c756581c19b0dded",
+  "size" : 3579904,
+  "contentType" : "application/octet-stream",
+  "location" : "https://developer.api.autodesk.com/oss/v2/buckets/hami_tst_bucket/objects/Cube0.rvt"
+}
+```
+## Extract Metadata
+GET {urn}/metadata 
+[https://developer.doc.autodesk.com/bPlouYTd/A360-platform-viewing-docs-master-33925/_images/model_2.png](https://developer.doc.autodesk.com/bPlouYTd/A360-platform-viewing-docs-master-33925/_images/model_2.png)
+## Translate Source File
+```python
+import base64
+objectId = "urn:adsk.objects:os.object:hami_tst_bucket/box.ipt"
+print(base64.urlsafe_b64encode(objectId.encode()))
+```
+```shell
+curl -X POST -H 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IlU3c0dGRldUTzlBekNhSzBqZURRM2dQZXBURVdWN2VhIn0.eyJzY29wZSI6WyJkYXRhOnJlYWQiLCJkYXRhOndyaXRlIiwiZGF0YTpjcmVhdGUiLCJidWNrZXQ6Y3JlYXRlIiwiYnVja2V0OnJlYWQiLCJidWNrZXQ6dXBkYXRlIiwiYnVja2V0OmRlbGV0ZSJdLCJjbGllbnRfaWQiOiI3Z3ltR1pFUjNLTGxvcHk0cVI4TTBXRUQycHc2N0VINyIsImF1ZCI6Imh0dHBzOi8vYXV0b2Rlc2suY29tL2F1ZC9hand0ZXhwNjAiLCJqdGkiOiJiNXNuaW9jV0Q1elF4UkxoN1NmYVl2aDY5bWZhY3N4dzlYa284Y2tHN2pEejl3eVdhZTVhUm1JVzdyY3NMMEJOIiwiZXhwIjoxNjU3NjIwNjk2fQ.CV7KcYvCK_AbX3O0L3FKRIKM83gSZkA6SRIaREk3YSkiHCvQgATtbbsd27knFNanQYdRffqvXhkjSws6rFQzzw4YgTMNgcdN__MldKI4NmWsJ2oDU8i8U-TJIW5Yx4d2SsYulzBc_wW2HxEj1CgLmaI3CAS2NRygmpi0fHqI_nSVviaCdG7HmEk4NFjsLefP0ZhZggStjaBCwRqqI6yoGn1sg-U4RGfodwqz8flLqS18hgzSH4a_bjO8rMZatyFWZmpav8gjlrjEtcVbra9hvEM_DDGLFM6rKdU2XeATKKxUzWehCucChXht1vM0k1OgmJpUkh9mmXCPSxEAhQGWSw' -H 'Content-Type: application/json' -d '{"input":{"urn":"dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6aGFtaV90c3RfYnVja2V0L2lubm9fdmFsbGV5LnJ2dA=="},"output":{"destination":{"region":"us"},"formats":[{"type":"svf2","views":["2d","3d"]}]}}' https://developer.api.autodesk.com/modelderivative/v2/designdata/job
+```
+```shell
+curl -X POST -H 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IlU3c0dGRldUTzlBekNhSzBqZURRM2dQZXBURVdWN2VhIn0.eyJzY29wZSI6WyJkYXRhOnJlYWQiLCJkYXRhOndyaXRlIiwiZGF0YTpjcmVhdGUiLCJidWNrZXQ6Y3JlYXRlIiwiYnVja2V0OnJlYWQiLCJidWNrZXQ6dXBkYXRlIiwiYnVja2V0OmRlbGV0ZSJdLCJjbGllbnRfaWQiOiI3Z3ltR1pFUjNLTGxvcHk0cVI4TTBXRUQycHc2N0VINyIsImF1ZCI6Imh0dHBzOi8vYXV0b2Rlc2suY29tL2F1ZC9hand0ZXhwNjAiLCJqdGkiOiJEaEdQbFFaR2NXYUVTZDU2bVhZVFU5eGRsaHNjbUpzdnBQckplVjNzdVZmM09BR3ltTGN2SzdET0kxY213TzRxIiwiZXhwIjoxNjU3NTE5ODQwfQ.UnzPvjdtAZmWnyuj7kINQpMFsHiE3MO_RWPAV1ul_4D-a6vlaEsZuFCJXdDiX4HkuhrLh6QsMs4vENV_k5DHNSV9q7J9ujO_VdPNkfLlhalXfHqcvUnGA5-6g5Q044q9xcJm8lGmRK8S5KLtwZAbDvgtod98ZePR8IrBzSjQEf5_bxHESdSSFV5uSWFH38VElHPJmV1JoOdYOskCy1rIbqzILirEtzxn99x3RK73MChENc7-7dyY_2YXvZXZc7OSj_z6gojC55I0CC_rvJe5aB6UdUn7xLCeZygFVHsg4U411ZkP9efOZyH4dkYxSAlUobnu3QJHVzvc66bVx3CgAQ' -H 'Content-Type: application/json' -d '{"input":{"urn":"dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6aGFtaV90c3RfYnVja2V0L0N1YmUwLnJ2dA=="},"output":{"destination":{"region":"us"},"formats":[{"type":"obj"}]}}' https://developer.api.autodesk.com/modelderivative/v2/designdata/job
+```
+```shell
+curl -X POST -H 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IlU3c0dGRldUTzlBekNhSzBqZURRM2dQZXBURVdWN2VhIn0.eyJzY29wZSI6WyJkYXRhOnJlYWQiLCJkYXRhOndyaXRlIiwiZGF0YTpjcmVhdGUiLCJidWNrZXQ6Y3JlYXRlIiwiYnVja2V0OnJlYWQiLCJidWNrZXQ6dXBkYXRlIiwiYnVja2V0OmRlbGV0ZSJdLCJjbGllbnRfaWQiOiI3Z3ltR1pFUjNLTGxvcHk0cVI4TTBXRUQycHc2N0VINyIsImF1ZCI6Imh0dHBzOi8vYXV0b2Rlc2suY29tL2F1ZC9hand0ZXhwNjAiLCJqdGkiOiJEaEdQbFFaR2NXYUVTZDU2bVhZVFU5eGRsaHNjbUpzdnBQckplVjNzdVZmM09BR3ltTGN2SzdET0kxY213TzRxIiwiZXhwIjoxNjU3NTE5ODQwfQ.UnzPvjdtAZmWnyuj7kINQpMFsHiE3MO_RWPAV1ul_4D-a6vlaEsZuFCJXdDiX4HkuhrLh6QsMs4vENV_k5DHNSV9q7J9ujO_VdPNkfLlhalXfHqcvUnGA5-6g5Q044q9xcJm8lGmRK8S5KLtwZAbDvgtod98ZePR8IrBzSjQEf5_bxHESdSSFV5uSWFH38VElHPJmV1JoOdYOskCy1rIbqzILirEtzxn99x3RK73MChENc7-7dyY_2YXvZXZc7OSj_z6gojC55I0CC_rvJe5aB6UdUn7xLCeZygFVHsg4U411ZkP9efOZyH4dkYxSAlUobnu3QJHVzvc66bVx3CgAQ' -H 'Content-Type: application/json' -d '{"input":{"urn":"dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6aGFtaV90c3RfYnVja2V0L2JveC5pcHQ="},"output":{"destination":{"region":"us"},"formats":[{"type":"obj"}]}}' https://developer.api.autodesk.com/modelderivative/v2/designdata/job
+```
+### Check status
+```shell
+curl -H 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IlU3c0dGRldUTzlBekNhSzBqZURRM2dQZXBURVdWN2VhIn0.eyJzY29wZSI6WyJkYXRhOnJlYWQiLCJkYXRhOndyaXRlIiwiZGF0YTpjcmVhdGUiLCJidWNrZXQ6Y3JlYXRlIiwiYnVja2V0OnJlYWQiLCJidWNrZXQ6dXBkYXRlIiwiYnVja2V0OmRlbGV0ZSJdLCJjbGllbnRfaWQiOiI3Z3ltR1pFUjNLTGxvcHk0cVI4TTBXRUQycHc2N0VINyIsImF1ZCI6Imh0dHBzOi8vYXV0b2Rlc2suY29tL2F1ZC9hand0ZXhwNjAiLCJqdGkiOiJiNXNuaW9jV0Q1elF4UkxoN1NmYVl2aDY5bWZhY3N4dzlYa284Y2tHN2pEejl3eVdhZTVhUm1JVzdyY3NMMEJOIiwiZXhwIjoxNjU3NjIwNjk2fQ.CV7KcYvCK_AbX3O0L3FKRIKM83gSZkA6SRIaREk3YSkiHCvQgATtbbsd27knFNanQYdRffqvXhkjSws6rFQzzw4YgTMNgcdN__MldKI4NmWsJ2oDU8i8U-TJIW5Yx4d2SsYulzBc_wW2HxEj1CgLmaI3CAS2NRygmpi0fHqI_nSVviaCdG7HmEk4NFjsLefP0ZhZggStjaBCwRqqI6yoGn1sg-U4RGfodwqz8flLqS18hgzSH4a_bjO8rMZatyFWZmpav8gjlrjEtcVbra9hvEM_DDGLFM6rKdU2XeATKKxUzWehCucChXht1vM0k1OgmJpUkh9mmXCPSxEAhQGWSw' 'https://developer.api.autodesk.com/modelderivative/v2/designdata/dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6aGFtaV90c3RfYnVja2V0L2lubm9fdmFsbGV5LnJ2dA==/manifest'
+```
+## Download
+```shell
+curl -H 'Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IlU3c0dGRldUTzlBekNhSzBqZURRM2dQZXBURVdWN2VhIn0.eyJzY29wZSI6WyJkYXRhOnJlYWQiLCJkYXRhOndyaXRlIiwiZGF0YTpjcmVhdGUiLCJidWNrZXQ6Y3JlYXRlIiwiYnVja2V0OnJlYWQiLCJidWNrZXQ6dXBkYXRlIiwiYnVja2V0OmRlbGV0ZSJdLCJjbGllbnRfaWQiOiI3Z3ltR1pFUjNLTGxvcHk0cVI4TTBXRUQycHc2N0VINyIsImF1ZCI6Imh0dHBzOi8vYXV0b2Rlc2suY29tL2F1ZC9hand0ZXhwNjAiLCJqdGkiOiJEaEdQbFFaR2NXYUVTZDU2bVhZVFU5eGRsaHNjbUpzdnBQckplVjNzdVZmM09BR3ltTGN2SzdET0kxY213TzRxIiwiZXhwIjoxNjU3NTE5ODQwfQ.UnzPvjdtAZmWnyuj7kINQpMFsHiE3MO_RWPAV1ul_4D-a6vlaEsZuFCJXdDiX4HkuhrLh6QsMs4vENV_k5DHNSV9q7J9ujO_VdPNkfLlhalXfHqcvUnGA5-6g5Q044q9xcJm8lGmRK8S5KLtwZAbDvgtod98ZePR8IrBzSjQEf5_bxHESdSSFV5uSWFH38VElHPJmV1JoOdYOskCy1rIbqzILirEtzxn99x3RK73MChENc7-7dyY_2YXvZXZc7OSj_z6gojC55I0CC_rvJe5aB6UdUn7xLCeZygFVHsg4U411ZkP9efOZyH4dkYxSAlUobnu3QJHVzvc66bVx3CgAQ' 'https://developer.api.autodesk.com/modelderivative/v2/designdata/dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6aGFtaV90c3RfYnVja2V0L2JveC5pcHQ/manifest/urn:adsk.viewing:fs.file:dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6aGFtaV90c3RfYnVja2V0L2JveC5pcHQ/output/b0f49f69-2c27-49f4-be88-c02002ba9e6f/box.obj/signedcookies' -v
+```
+```
+curl -H 'CloudFront-Policy=eyJTdGF0ZW1lbnQiOiBbeyJSZXNvdXJjZSI6Imh0dHBzOi8vY2RuLmRlcml2YXRpdmUuYXV0b2Rlc2suY29tL2RYSnVPbUZrYzJzdWIySnFaV04wY3pwdmN5NXZZbXBsWTNRNmFHRnRhVjkwYzNSZlluVmphMlYwTDJKdmVDNXBjSFEvb3V0cHV0L2IwZjQ5ZjY5LTJjMjctNDlmNC1iZTg4LWMwMjAwMmJhOWU2Zi9ib3gub2JqIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNjU3NTM5MTA1fX19XX0_; Path=/; Domain=cdn.derivative.autodesk.com; HTTPOnly;CloudFront-Key-Pair-Id=APKAIJ4JBLIOQMJEURDQ; Path=/; Domain=cdn.derivative.autodesk.com; HTTPOnly;CloudFront-Signature=dSScVG2fyaF0Yfn8Wo1ajv80kGvWT6aSXYtSH7uTPtj-j~nJt-rfZtpJO5clihFUkWV5xHpVGpdTLskzq3JqV46Pxtow1OgSJOHcJ1Dup68Up75eMbFx9U6dxXcBKqE9Y21G8VNO9~CGkQj8tznvH1YV6Afm7V0fy88UExKg3jQ0k2xMI8dmkh5hUjchU7yNtezZLao65ZC~MZbkXu1yhowAdJwcnXN781RXCSroeSz19GJ-l7nwXDlBqAv7F2geJV5aBZVs~oEPNJz2HwB14FzLagc1YQasRLZ-6OTdy0AzLV2qZIm27yOEwAp-kz5ShvY38KBNeF1XK4NdXLqCsA__; Path=/; Domain=cdn.derivative.autodesk.com; HTTPOnly' 'https://cdn.derivative.autodesk.com/dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6aGFtaV90c3RfYnVja2V0L2JveC5pcHQ/output/b0f49f69-2c27-49f4-be88-c02002ba9e6f/box.obj'
+```
+```shell
+curl --cookie "CloudFront-Policy=eyJTdGF0ZW1lbnQiOiBbeyJSZXNvdXJjZSI6Imh0dHBzOi8vY2RuLmRlcml2YXRpdmUuYXV0b2Rlc2suY29tL2RYSnVPbUZrYzJzdWIySnFaV04wY3pwdmN5NXZZbXBsWTNRNmFHRnRhVjkwYzNSZlluVmphMlYwTDJKdmVDNXBjSFEvb3V0cHV0L2IwZjQ5ZjY5LTJjMjctNDlmNC1iZTg4LWMwMjAwMmJhOWU2Zi9ib3gub2JqIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNjU3NTM5MTA1fX19XX0_" --cookie "CloudFront-Key-Pair-Id=APKAIJ4JBLIOQMJEURDQ" --cookie "CloudFront-Signature=dSScVG2fyaF0Yfn8Wo1ajv80kGvWT6aSXYtSH7uTPtj-j~nJt-rfZtpJO5clihFUkWV5xHpVGpdTLskzq3JqV46Pxtow1OgSJOHcJ1Dup68Up75eMbFx9U6dxXcBKqE9Y21G8VNO9~CGkQj8tznvH1YV6Afm7V0fy88UExKg3jQ0k2xMI8dmkh5hUjchU7yNtezZLao65ZC~MZbkXu1yhowAdJwcnXN781RXCSroeSz19GJ-l7nwXDlBqAv7F2geJV5aBZVs~oEPNJz2HwB14FzLagc1YQasRLZ-6OTdy0AzLV2qZIm27yOEwAp-kz5ShvY38KBNeF1XK4NdXLqCsA__" 'https://cdn.derivative.autodesk.com/dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6aGFtaV90c3RfYnVja2V0L2JveC5pcHQ/output/b0f49f69-2c27-49f4-be88-c02002ba9e6f/box.obj'
+```
+
+
+
+# Translate a Revit File
+
+
+
+# Viewer
+Autodesk Forge Viewer是一个基于WebGL的客户端3D模型渲染库。
+## Toolbar
+3D模型特有的工具是section,explode和ViewCube.  
+## 开始之前
+在display model之前，你需要translate model.即seed file -> SVF格式。这里需要两个额外API，Model Derivative API和OAuth.
+
+
+# 本地开发接口
+## 获取autodesk token
+```
+curl https://beta-dev.yijianar.com/api/autodesk_token
+```

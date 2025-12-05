@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="https://unpkg.com/mermaid@9.1.7/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <div class="mermaid">
+    graph LR
+     A --- B
+     B-->C[fa:fa-ban forbidden]
+     B-->D(fa:fa-spinner hello);
+  </div>
+  <div class="mermaid">
+    flowchart LR 
+      id
+  </div>
+  <div class="mermaid">
+    flowchart LR
+    id1(This is the text in the box)
+  </div>
+  <div class="mermaid">
+    flowchart LR
+    id1([This is the text in the box])
+  </div>
+  <div class="mermaid">
+    flowchart LR
+    id1[(Database)]
+  </div>
+  <div class="mermaid">
+    flowchart LR
+    id1((This is the text in the circle))
+  </div>
+  <div class="mermaid">
+    flowchart TD
+    Start --> Stop
+  </div>
+  <div class="mermaid">
+    flowchart LR
+    Start --> Stop
+  </div>
+  <div class="mermaid">
+    flowchart LR
+    a --> b & c --> d --x e
+  </div>
+
+  <div class="mermaid">
+    flowchart TD 
+    A[Start] --> B{Is it?}
+    B -- Yes --> C[OK]
+    C --> D[Rethink]
+    D --> B 
+    B -- No --> E[End]
+  </div>
+
+  <div class="mermaid">
+    flowchart LR
+    c1 --> a2
+    c1 --> b2
+    subgraph one 
+    a1 --> a2 
+    end 
+    subgraph two 
+    b1 --> b2 
+    end 
+    subgraph three 
+    c1 --> c2
+    end
+  </div>
+
+  <script>
+    mermaid.initialize({startOnLoad:true});
+  </script>
+</body>
+</html>

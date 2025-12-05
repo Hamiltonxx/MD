@@ -1,0 +1,1 @@
+<iframe width="1236" height="695" src="https://www.youtube.com/embed/j5N2j6Ydhao" title="【漫士科普】GPT是如何工作的？为什么要学习接下一个词？#gpt #chatgpt #openai" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>

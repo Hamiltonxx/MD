@@ -1,0 +1,5 @@
+# Introduction
+Possession of the key that can sign a transaction is the only prerequisite to spending bitcoin.   
+Every 10 minutes, on average, one Bitcoin miner can add security to past transactions and is rewarded with both brand new bitcoins and the fees paid by recent transactions.   
+A key innovation was to use a distributed computation system to conduct a global lottery every 10 minutes on average, allowing the decentralized network to arrive at consensus about the state of transactions. This elegantly solves the issue of double-spend where a single currency unit can be spent twice. Previously, the double-spend problem was a weakness of digital currency and was addressed by clearing all transactions through a central clearinghouse.  
+A Bitcoin wallet is the most common user interface to the Bitcoin system.

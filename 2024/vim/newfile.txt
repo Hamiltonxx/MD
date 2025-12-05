@@ -1,0 +1,18 @@
+# Open a file
+```shell
+$ vim /etc/passwd
+
+$ vim
+:e /etc/passwd
+```
+
+# Save a file
+```shell
+:w (or) :write
+:up (or) :update
+:w newfile.txt
+:up newfile.txt
+:w! newfile.txt
+:up! newfile.txt
+```
+
