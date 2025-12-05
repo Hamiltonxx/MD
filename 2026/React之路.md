@@ -168,3 +168,73 @@ function List() {
   );
 }
 ```
+
+# React DOM
+
+App component 的声明和实例化, 看 src/main.jsx
+
+```javascript
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import 'index.css';
+import App from './App.jsx';
+
+createRoot(document.getElementById('root)).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+)
+```
+
+查看 index.html
+
+```html
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+```
+
+# React component 声明和实例化
+
+如果箭头函数只返回一个值而没有别的逻辑，那么可以去掉 {} 和 return，使用简洁写法。
+
+```jsx
+const App = () => (
+  <>
+    <Search />
+    <hr />
+    <List />
+  </>
+);
+const Search = () => <></>;
+const List = () => (
+  <ul>
+    {list.map((item) => (
+      <li key={item.objectID}>...</li>
+    ))}
+  </ul>
+);
+```
+
+# Handler Function
+
+## Synthetic Event
+
+SyntheticEvent = React 自己封装的事件对象，用来实现跨浏览器统一 & 性能优化(事件委托)。  
+你写的 onClick/onChange 收到的不是原生事件，而是 React 的合成事件。
+
+```jsx
+const Search = () => {
+  const handleChange = (event) => {
+    console.log(event);
+    console.log(event.target.value);
+  }
+  return (
+    <label htmlFor="search">Search: </label>
+    <input id="search" type="text" onChange={handleChange} />
+  );
+}
+```
+
+# React Props
