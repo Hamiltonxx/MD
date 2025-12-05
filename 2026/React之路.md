@@ -238,3 +238,33 @@ const Search = () => {
 ```
 
 # React Props
+
+```jsx
+const App = () => {
+  const stories = [
+    {...},{...}
+  ];
+  return (
+    <List list={stories} />
+  )
+}
+const List = ({list}) => (
+  <ul>
+    {list.map((item) => (
+      <li key={item.objectID}>...</li>
+    ))}
+  </ul>
+)
+```
+
+注意不能用
+
+```jsx
+const List = (props) => (
+  {props.map(...)}
+)
+```
+
+因为 props 是对象而不是数组。
+
+# React State
